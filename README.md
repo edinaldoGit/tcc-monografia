@@ -120,27 +120,6 @@ tcc-monografia/
 
 ---
 
-## 🛠️ Como Compilar Localmente
-
-Você pode compilar a monografia no **Overleaf** (importando o repositório ou os arquivos `.tex`) ou localmente usando uma distribuição TeX completa (como **TeX Live**) com `pdflatex`, `bibtex` e `makeglossaries`:
-
-```bash
-# Compilação automática com latexmk (recomendado)
-latexmk -pdf -pdflatex="pdflatex -interaction=nonstopmode" documento.tex
-```
-
-Ou executando as etapas manualmente:
-
-```bash
-pdflatex documento.tex
-bibtex documento
-makeglossaries documento
-pdflatex documento.tex
-pdflatex documento.tex
-```
-
----
-
 ## 📌 Como Citar
 
 ```bibtex
