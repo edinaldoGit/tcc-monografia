@@ -1,0 +1,71 @@
+\newglossaryentry{alucinacao}{
+	name={Alucinação},
+	sort={Alucinacao},
+	description={geração, por um modelo de linguagem, de afirmações plausíveis e gramaticalmente corretas, porém falsas ou sem respaldo nas fontes fornecidas}
+}
+
+\newglossaryentry{bbox}{
+	name={\textit{Bounding box} (caixa delimitadora)},
+	sort={Bounding box},
+	description={retângulo definido por coordenadas $(x_1, y_1, x_2, y_2)$ que delimita a posição exata de um componente (parágrafo, tabela, figura ou fórmula) na imagem de uma página}
+}
+
+\newglossaryentry{chunk}{
+	name={\textit{Chunk} (fragmento textual)},
+	sort={Chunk},
+	description={bloco de texto de tamanho fixo ou delimitado em que um documento é dividido para indexação e busca em sistemas de RAG tradicional}
+}
+
+\newglossaryentry{coveragek}{
+	name={\textit{Coverage@k}},
+	sort={Coverage},
+	description={métrica de recuperação que indica a proporção de consultas em que a página de referência aparece entre as $k$ primeiras posições retornadas pela busca}
+}
+
+\newglossaryentry{embedding}{
+	name={\textit{Embedding} (vetor de representação)},
+	sort={Embedding},
+	description={vetor de números reais produzido por uma rede neural para representar o significado de um texto ou imagem, de modo que conteúdos semelhantes fiquem próximos no espaço vetorial}
+}
+
+\newglossaryentry{hitk}{
+	name={\textit{Hit@k}},
+	sort={Hit},
+	description={métrica de recuperação que mede a fração de perguntas em que ao menos uma evidência correta aparece entre os $k$ primeiros resultados da busca}
+}
+
+\newglossaryentry{lateinteraction}{
+	name={\textit{Late interaction} (interação tardia)},
+	sort={Late interaction},
+	description={mecanismo de comparação vetorial em que as partes da pergunta e as regiões do documento mantêm vetores próprios e são comparadas individualmente no momento da busca}
+}
+
+\newglossaryentry{mrrk}{
+	name={\textit{MRR@k} (\textit{Mean Reciprocal Rank})},
+	sort={MRR},
+	description={média, entre todas as perguntas, do inverso da posição ($1/r$) do primeiro resultado correto entre os $k$ primeiros retornados; atribui zero quando não há acerto até a posição $k$}
+}
+
+\newglossaryentry{quantizacao}{
+	name={Quantização},
+	sort={Quantizacao},
+	description={técnica que reduz o número de bits usados para representar os parâmetros de uma rede neural (por exemplo, para 4 bits), diminuindo o consumo de memória na execução}
+}
+
+\newglossaryentry{reranking}{
+	name={\textit{Reranking} (reordenação)},
+	sort={Reranking},
+	description={etapa opcional após a busca vetorial inicial que reavalia e reordena os candidatos recuperados segundo critérios adicionais de relevância}
+}
+
+\newglossaryentry{ruidocontextual}{
+	name={Ruído contextual},
+	sort={Ruido contextual},
+	description={informação irrelevante para a pergunta que acaba incluída junto ao trecho útil quando a unidade recuperada é grande, como uma página inteira}
+}
+
+\newglossaryentry{token}{
+	name={\textit{Token}},
+	sort={Token},
+	description={unidade básica de texto (palavra, parte de palavra ou sinal de pontuação) processada ou gerada por um modelo de linguagem}
+}

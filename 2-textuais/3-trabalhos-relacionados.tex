@@ -1,0 +1,60 @@
+\chapter{Trabalhos Relacionados}
+\label{sec:trabalhos-relacionados}
+
+Este capítulo apresenta três trabalhos recentes que abordam a recuperação de informações em documentos com conteúdos textuais e visuais. São discutidas suas principais características e diferenças em relação ao EDGAR, considerando as estratégias utilizadas para representar, localizar e organizar evidências documentais. Ao final, a Seção~\ref{subsec:analise-comparativa} apresenta uma análise comparativa entre as abordagens e identifica a lacuna que motiva a proposta.
+
+\section{ColPali}
+\label{sec:colpali}
+
+\citeonline{faysse2025colpali} apresentam o \textit{ColPali}, no artigo \textit{ColPali: Efficient Document Retrieval with Vision Language Models}, uma abordagem que recupera documentos a partir de representações visuais de suas páginas, sem depender da extração prévia de texto. O modelo gera vetores associados a diferentes regiões da imagem e utiliza um mecanismo de interação tardia (\textit{late interaction}), no qual cada parte da consulta é comparada individualmente com as regiões da página. Dessa forma, informações presentes em tabelas, figuras e na disposição dos elementos da página podem participar da recuperação.
+
+O ColPali e o EDGAR reconhecem a importância do conteúdo visual dos documentos, mas diferem na unidade recuperada e na forma de representá-lo. Enquanto o ColPali utiliza imagens de páginas inteiras na busca, o EDGAR identifica componentes documentais e incorpora descrições de elementos visuais às representações textuais utilizadas na recuperação. Esses componentes permanecem associados à sua localização no PDF, permitindo apresentar evidências de regiões específicas ao usuário.
+
+\section{LILaC}
+\label{sec:lilac}
+
+\citeonline{yun2025lilac} apresentam o LILaC, no artigo \textit{LILaC: Late Interacting in Layered Component Graph for Open-domain Multimodal Multihop Retrieval}, uma abordagem de recuperação multimodal que organiza documentos em um grafo de componentes. Nessa estrutura, elementos como parágrafos, tabelas e imagens são relacionados em diferentes níveis de granularidade. O sistema recupera conjuntos de componentes conectados, o que permite reunir evidências distribuídas em diferentes partes dos documentos para responder a consultas que exigem múltiplas informações.
+
+Assim como o LILaC, o EDGAR considera os componentes documentais como unidades relevantes de recuperação. A diferença está na forma de organização dessas unidades: o LILaC representa explicitamente relações entre componentes por meio de um grafo, enquanto o EDGAR indexa componentes individualizados com seus conteúdos textuais, descrições visuais e metadados de origem e localização. O EDGAR não utiliza um grafo de relações equivalente ao do LILaC; sua ênfase está na recuperação semântica de componentes e na apresentação de evidências rastreáveis no PDF.
+
+\section{SLEUTH}
+\label{sec:sleuth}
+
+\citeonline{liu2025resolving} propõem o SLEUTH, no artigo \textit{Resolving Evidence Sparsity via Agentic Context Engineering for Long-Document Understanding}, um \textit{framework} que utiliza agentes de inteligência artificial para selecionar e refinar evidências em documentos longos. Durante a consulta, esses agentes analisam pistas textuais e visuais, identificam informações relevantes e organizam o contexto fornecido ao modelo gerador. A abordagem procura lidar com situações em que as evidências necessárias estão dispersas ao longo de muitas páginas.
+
+A aproximação com o EDGAR está na preocupação com a seleção de evidências para apoiar a geração de respostas. Entretanto, os sistemas organizam esse processo de maneiras diferentes. No SLEUTH, o refinamento ocorre durante a consulta, com a participação de múltiplos agentes. No EDGAR, os documentos são segmentados e seus componentes textuais e visuais são preparados previamente, durante a ingestão e a indexação. Na consulta, a arquitetura recupera as representações indexadas e reúne as evidências sem uma etapa iterativa de curadoria por múltiplos agentes.
+
+\section{Análise Comparativa}
+\label{subsec:analise-comparativa}
+
+O Quadro~\ref{quad:comparativo_trabalhos} reúne características das abordagens discutidas. Os critérios foram escolhidos para evidenciar diferenças na unidade de recuperação, no tratamento de conteúdos visuais, na organização das evidências e no processamento das consultas. Trata-se de uma comparação conceitual entre arquiteturas, não de uma comparação experimental de desempenho.
+
+\begin{quadro}[H]
+\centering
+\caption{Análise comparativa dos trabalhos relacionados e o presente trabalho.}
+\label{quad:comparativo_trabalhos}
+\begingroup
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|p{2.5cm}|X|X|X|X|}
+\hline
+\textbf{Critério} & \textbf{ColPali} & \textbf{LILaC} & \textbf{SLEUTH} & \textbf{EDGAR} \\
+\hline
+Unidade de recuperação & Página & Componentes e subgrafos & Páginas e evidências refinadas & Componente documental \\
+\hline
+Tratamento visual & Representações visuais das páginas & Componentes visuais no grafo & Identificação e seleção de pistas visuais & Descrições textuais de elementos visuais \\
+\hline
+Organização das evidências & Vetores de regiões da página & Grafo de componentes em camadas & Refinamento por agentes & Registros individuais com metadados \\
+\hline
+Estratégia de consulta & Recuperação visual por interação tardia & Recuperação de subgrafos & Busca e refinamento durante a consulta & Busca vetorial sobre representações textuais \\
+\hline
+Domínio de aplicação & Documentos de diferentes domínios & Recuperação multimodal em domínio aberto & Compreensão de documentos longos & Documentos didáticos em PDF \\
+\hline
+\end{tabularx}
+\endgroup
+\legend{Fonte: Elaborado pelo autor.}
+\end{quadro}
+
+Como sintetizado no Quadro~\ref{quad:comparativo_trabalhos}, os trabalhos analisados exploram a estrutura textual e visual de documentos por caminhos distintos: páginas inteiras representadas visualmente (ColPali), grafos de componentes em domínio aberto (LILaC) ou documentos longos consultados por múltiplos agentes (SLEUTH). Segundo as descrições dos respectivos artigos, nenhum deles se concentra na consulta a livros-texto e apostilas em PDF, nem coloca a rastreabilidade das respostas até regiões específicas do documento como elemento central da arquitetura.
+
+Essa é a lacuna que o EDGAR busca ocupar: segmentar documentos didáticos em componentes individuais, descrever previamente seus elementos visuais para integrá-los à busca semântica textual e manter cada registro vinculado às suas coordenadas geométricas no PDF. Tais diferenças caracterizam a proposta implementada neste trabalho, sem implicar superioridade experimental de desempenho em relação ao ColPali, ao LILaC ou ao SLEUTH, que não integraram as configurações avaliadas nos experimentos.

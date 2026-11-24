@@ -1,0 +1,84 @@
+\chapter{Metodologia}
+\label{chap:metodologia-avaliacao}
+
+Este capítulo descreve a metodologia desenvolvida para avaliar experimentalmente a arquitetura EDGAR. A avaliação tem natureza aplicada e experimental, com abordagem quantitativa e descritiva, e foi organizada em seis etapas: definição do ambiente e dos parâmetros de execução, seleção dos documentos e elaboração das consultas, construção das configurações comparativas, protocolo de recuperação, protocolo de geração de respostas e critérios de avaliação da qualidade. A execução prática desse plano, as restrições operacionais encontradas e os resultados obtidos são apresentados no Capítulo~\ref{cap:resultados}.
+
+\section{Ambiente experimental}
+\label{sec:ambiente_execucao}
+
+O ambiente experimental combina rotinas locais em Python com serviços de inferência hospedados em nuvem na plataforma Modal\footnote{Plataforma de computação em nuvem que disponibiliza GPUs sob demanda: \url{https://modal.com}.}. Os modelos de detecção de \textit{layout} (DocLayout-YOLO), descrição visual (Qwen3-VL-4B-Instruct), vetorização textual (BGE-M3) e geração de respostas (Qwen2.5-7B-Instruct) são executados em contêineres equipados com GPU NVIDIA T4, enquanto a coordenação dos fluxos, o banco vetorial Qdrant e o cálculo das métricas permanecem em ambiente local.
+
+Na preparação dos documentos, as páginas são renderizadas a 300 DPI e submetidas ao DocLayout-YOLO com resolução de entrada de 1024 pixels e limiar de confiança de 0,2. Na geração das respostas, o modelo Qwen2.5-7B-Instruct utiliza quantização em 4 bits (técnica que reduz a precisão numérica dos parâmetros para diminuir o uso de memória da GPU), geração determinística (sem amostragem aleatória) e limite de 128 \textit{tokens} de saída por consulta. As execuções são conduzidas por scripts automatizados que registram as evidências recuperadas e as respostas produzidas.
+
+\section{Conjunto de documentos e elaboração das consultas}
+\label{sec:conjunto_documentos_perguntas}
+
+Para contemplar documentos didáticos com diferentes estruturas textuais e visuais, foram selecionados quatro materiais em PDF de áreas distintas:
+\begin{itemize}
+    \item[-] \textbf{Cálculo:} \textit{Calculus Volume 1} \citeb{openstax2016calculus}, com 218 páginas selecionadas;
+    \item[-] \textbf{Teoria dos Grafos:} \textit{Grafos: Conceitos Fundamentais, Algoritmos e Aplicações} \citeb{gomes2022grafos}, com 104 páginas selecionadas;
+    \item[-] \textbf{Física:} \textit{University Physics Volume 1} \citeb{moebs2016universityphysics}, com 152 páginas selecionadas;
+    \item[-] \textbf{Estatística:} \textit{Introdução à Estatística com R} \citeb{ferreira2020estatistica}, com 104 páginas selecionadas.
+\end{itemize}
+
+Juntos, os recortes curados desses quatro materiais somam 578 páginas, reunindo texto expositivo, tabelas numéricas, gráficos de funções, diagramas e fórmulas matemáticas.
+
+A partir da leitura direta dos PDFs, e sem consultar respostas produzidas pelo sistema, foi elaborado um conjunto de 40 perguntas (dez por documento), distribuídas em cinco categorias: \textbf{evidência visual} (leitura de figuras, gráficos e diagramas), \textbf{raciocínio multimodal} (articulação entre elementos visuais e texto ou tabela), \textbf{recuperação de texto} (conceitos e definições em parágrafos), \textbf{fórmulas} (expressões matemáticas) e \textbf{tabelas} (consulta a linhas e colunas).
+
+Para separar o ajuste do sistema da avaliação final, o conjunto de 40 consultas foi dividido em dois grupos fixos: 16 perguntas reservadas para desenvolvimento e verificação dos fluxos e 24 perguntas (seis por documento) destinadas ao teste comparativo final. Cada pergunta foi acompanhada de uma resposta de referência baseada no documento original e do gabarito da evidência esperada, composto pelo identificador do arquivo, pela página física do PDF curado e pelo tipo de componente correspondente.
+
+\section{Configurações comparativas}
+\label{sec:configuracoes_comparativas}
+
+A metodologia compara quatro configurações de indexação aplicadas sobre os mesmos documentos, utilizando o mesmo modelo de \textit{embeddings} (BGE-M3) e o mesmo modelo gerador (Qwen2.5-7B-Instruct). O Quadro~\ref{quad:configuracoes_comparativas} define a unidade de recuperação e o processo de preparação dos registros em cada condição.
+
+\begin{quadro}[H]
+\centering
+\caption{Configurações definidas para a avaliação experimental comparativa.}
+\label{quad:configuracoes_comparativas}
+\begingroup
+\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{|p{2.6cm}|p{3.6cm}|X|}
+\hline
+\textbf{Código e nome} & \textbf{Unidade de recuperação} & \textbf{Preparação dos registros} \\
+\hline
+E1 (fragmentos) & Fragmento textual fixo & Texto extraído diretamente do PDF e dividido em blocos contínuos de 1.000 caracteres, com sobreposição de 200 caracteres entre blocos vizinhos. \\
+\hline
+E2 (páginas) & Página textual & Texto completo extraído de cada página do PDF armazenado como um único registro de busca. \\
+\hline
+E3 (EDGAR sem visão) & Componente documental & Segmentação por componentes do EDGAR, mantendo texto extraído, estrutura de tabelas e vínculos com legendas, mas sem descrições visuais geradas por VLM. \\
+\hline
+E4 (EDGAR completo) & Componente documental & Arquitetura EDGAR completa, combinando a representação textual dos componentes com as descrições geradas pelo modelo Qwen3-VL-4B-Instruct para figuras e tabelas sem texto recuperável. \\
+\hline
+\end{tabularx}
+\endgroup
+\legend{Fonte: Elaborado pelo autor.}
+\end{quadro}
+
+Nas configurações por componentes (E3 e E4), a indexação depende da existência de conteúdo textual ou descrição visual associada, de modo que regiões descartadas (como cabeçalhos e rodapés) e fórmulas matemáticas isoladas sem transcritor dedicado não geram registros independentes. Esse desenho experimental permite isolar duas dimensões de análise: a comparação entre E1, E2 e E3 avalia o efeito da unidade de granularidade (fragmentos fixos, página inteira ou componente documental), enquanto a comparação entre E3 e E4 isola o efeito do enriquecimento visual produzido pelo modelo de visão e linguagem.
+
+\section{Protocolo de recuperação}
+\label{sec:protocolo_recuperacao}
+
+Na etapa de recuperação, as perguntas e os registros de cada configuração são convertidos em vetores densos normalizados de 1.024 dimensões pelo modelo BGE-M3. Para cada consulta, realiza-se uma busca global no Qdrant sobre todos os documentos indexados, ordenando os registros pela similaridade de cosseno, sem aplicar filtro prévio por documento e sem etapa adicional de reordenação (\textit{reranking}).
+
+Como as quatro configurações possuem unidades de tamanhos distintos, a comparação da busca é realizada no nível da página: cada página recebe a pontuação de similaridade do seu registro mais bem colocado naquela consulta, formando um ranking único de páginas por configuração. Sobre esse ranking são calculadas as três métricas definidas na Seção~\ref{subsec:metricas_rag}: \textit{Hit@5}, \textit{MRR@5} e \textit{Coverage@128}.
+
+\section{Protocolo de geração}
+\label{sec:protocolo_geracao}
+
+Para avaliar o efeito das evidências recuperadas sobre a resposta final, o modelo gerador Qwen2.5-7B-Instruct recebe a mesma instrução de sistema nas quatro configurações: responder utilizando exclusivamente as evidências fornecidas, citar ao final de cada afirmação factual a fonte correspondente no formato \texttt{[Evidence N]} e declarar quando o contexto não contiver informação suficiente.
+
+A montagem do contexto percorre os 20 primeiros registros retornados pela busca, na ordem original de similaridade, e acrescenta unidades inteiras até atingir um orçamento comum de entrada de 5.000 unidades (calculado pelo número de \textit{bytes} UTF-8 do prompt). A inclusão para imediatamente antes do primeiro candidato que ultrapasse esse limite, sem cortar o texto interno de um registro.
+
+\section{Protocolo de avaliação das respostas}
+\label{sec:avaliacao_qualidade}
+
+A qualidade das respostas geradas nas quatro configurações é avaliada por dois instrumentos complementares:
+
+\begin{enumerate}
+    \item \textbf{Grade de critérios de qualidade (rubrica):} tabela padronizada de correção na qual um modelo avaliador (Codex) atribui de 0 a 2 pontos para três dimensões: \textbf{correção factual} (concordância com o PDF original), \textbf{fundamentação} (apoio nas evidências entregues no prompt) e \textbf{completude} (atendimento completo à pergunta), somando de 0 a 6 pontos por resposta. As respostas são avaliadas com identificadores anônimos e também recebem uma marcação binária indicando a presença ou ausência de \textbf{alucinação}.
+
+    \item \textbf{Métricas do \textit{framework} RAGAS:} aplicação automatizada da versão 0.4.3 do RAGAS \citeb{es2024ragas} para calcular as cinco medidas definidas no Quadro~\ref{quad:metricas_ragas} (apoio na evidência, pertinência da resposta, correção factual, precisão do contexto e cobertura do contexto), utilizando o modelo Qwen2.5-7B-Instruct e vetores do BGE-M3.
+\end{enumerate}

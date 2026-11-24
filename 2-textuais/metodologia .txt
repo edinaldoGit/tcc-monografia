@@ -1,0 +1,147 @@
+1. Contexto de Aplicação e Arquitetura do Sistema
+O EDGAr foi projetado para atuar como o motor de inteligência de backend do LuminIA Reader, um leitor de PDFs baseado na web. O ecossistema opera sob o modelo cliente-servidor:
+
+Frontend (LuminIA Reader Web): Uma interface em execução no navegador do usuário, responsável pela renderização do PDF, captura das dúvidas dos estudantes e exibição das respostas integradas aos elementos visuais originais.
+
+Backend (Servidor EDGAr): O pipeline de engenharia de dados onde ocorrem as etapas de busca em espaço visual, Análise de Layout de Documentos (DLA), cálculo de coordenadas geométricas, recorte digital (cropping) do componente relevante e orquestração do modelo de linguagem.
+
+2. Paradigma de Desenvolvimento (Abordagem Training-Free)
+O projeto se estabelece rigorosamente como um trabalho de Engenharia de Software e Integração de Sistemas. Alinhado às diretrizes metodológicas, não há o desenvolvimento de novos treinamentos de redes neurais ou ajustes finos (fine-tuning) de pesos. O EDGAr realiza processamento puramente por Inferência e Aprendizado em Contexto (In-Context Learning), consumindo componentes prontos da literatura (off-the-shelf):
+
+Um modelo de linguagem e visão (VLM) pré-treinado para a recuperação visual de páginas.
+
+Um modelo híbrido de DLA para a extração geométrica de bounding boxes.
+
+Modelos de linguagem pré-treinados para a geração da resposta textual final.
+
+3. Estratégia de LLM e Abordagem Científica para a Pesquisa
+A escolha dos modelos geradores de texto adota uma perspectiva experimental rígida para validar o EDGAr como uma pesquisa científica em Ciência da Computação, estruturando-se em duas frentes:
+
+Modelo de Geração Principal (Foco da Arquitetura): Modelos de código aberto e pesos liberados (Open-Weights/Open-Source) de escala reduzida (como LLaMA-3 8B ou Qwen-2.5 7B/8B). Para viabilizar o protótipo web sem custos proibitivos de hardware local, a inferência desses modelos ocorre via consumo de APIs de infraestrutura especializada (como Groq, Together AI ou Hugging Face).
+
+Modelo de Controle (Baseline): Modelos proprietários e comerciais de larga escala (como GPT-4o ou Gemini Pro) via API corporativa, utilizados estritamente como linha de base para comparação de desempenho.
+
+4. A Hipótese Central do Trabalho (A Tese do EDGAr)
+A validação científica do EDGAr baseia-se na tese de que a curadoria geométrica de layout (o isolamento cirúrgico de tabelas, gráficos ou caixas de fórmulas) compensa a limitação paramétrica de LLMs menores.
+
+Modelos abertos de 8B parâmetros tendem a falhar ou alucinar quando submetidos ao ruído de páginas inteiras de livros didáticos (cabeçalhos, rodapés, textos adjacentes). Ao purificar o contexto de entrada através do recorte digital, o EDGAr remove o fardo do ruído contextual, permitindo que um modelo open-source local ou hospedado atinja níveis de acurácia pedagógica e mitigação de alucinações comparáveis aos de modelos comerciais gigantescos, garantindo custos operacionais mínimos e total reprodutibilidade acadêmica.
+
+Pipeline Completo — Do PDF à Resposta
+PDF (digital ou escaneado)
+        ↓
+[FASE 1] Unificação Visual
+        ↓
+[FASE 2] Busca Visual de Páginas (VLM)
+        ↓
+[FASE 3] Análise de Layout (DLA) + Bounding Boxes
+        ↓
+[FASE 4] Recorte Digital (Cropping)
+        ↓
+[FASE 5] OCR Cirúrgico
+        ↓
+[FASE 6] Vetorização e Indexação Híbrida
+        ↓
+[FASE 7] Geração da Resposta (LLM)
+        ↓
+LuminIA Reader (Frontend)
+
+
+Descrição de Cada Fase
+Fase 1 — Unificação Visual
+Na etapa inicial do pipeline, todas as páginas do documento PDF são convertidas em imagens de alta resolução, independentemente de sua natureza — digital com texto selecionável ou escaneado. Essa normalização é fundamental para garantir que as fases subsequentes operem de forma uniforme sobre qualquer tipo de documento acadêmico, resolvendo nativamente o problema dos materiais didáticos escaneados amplamente presentes em bibliotecas digitais.
+Fase 2 — Busca Visual de Páginas (VLM)
+Diante de uma consulta do estudante, o sistema aciona um modelo de linguagem e visão (VLM) pré-treinado, responsável por realizar a busca no espaço visual do documento. O modelo compara o vetor semântico da consulta com as representações visuais das páginas indexadas, identificando e ranqueando as páginas com maior probabilidade de conter a resposta. Essa etapa opera em granularidade de página, funcionando como um primeiro filtro de recuperação.
+Fase 3 — Análise de Layout (DLA) e Cálculo de Bounding Boxes
+Sobre as páginas identificadas na fase anterior, o sistema aplica um modelo híbrido de Análise de Layout de Documentos (Document Layout Analysis — DLA), responsável por detectar e classificar os componentes estruturais presentes: parágrafos, títulos, tabelas, figuras, legendas, fórmulas e caixas de destaque. Para cada componente detectado, o modelo calcula as coordenadas geométricas precisas — as bounding boxes — que delimitam sua posição exata na página. Essa é a etapa central que viabiliza a granularidade fina do EDGAr, permitindo que o sistema opere em nível de elemento e não de página inteira.
+Fase 4 — Recorte Digital (Cropping)
+Com as coordenadas geométricas calculadas, o pipeline realiza o recorte digital cirúrgico de cada componente relevante, isolando-o do restante da página. Esse processo elimina o ruído contextual — cabeçalhos, rodapés, textos adjacentes, elementos decorativos — que tipicamente compromete a qualidade do contexto entregue ao modelo de linguagem. O componente recortado é a unidade mínima de conhecimento que o EDGAr preserva, mantendo o elo pedagógico entre os elementos textuais e visuais estruturalmente relacionados.
+Fase 5 — OCR Cirúrgico
+Após o recorte, o pipeline aplica OCR de forma cirúrgica exclusivamente sobre o componente isolado. Se o componente pertencer a um PDF digital, o sistema pode optar pela extração direta do texto nas coordenadas geométricas correspondentes, sem necessidade de OCR completo. Se o componente pertencer a um documento escaneado, o OCR é aplicado sobre a imagem recortada, extraindo o conteúdo textual com alta precisão por operar sobre uma região limpa e delimitada. Essa abordagem é significativamente mais eficiente e precisa do que aplicar OCR sobre a página inteira, resolvendo o problema clássico de corrupção de dados em documentos complexos.
+Fase 6 — Vetorização e Indexação Híbrida
+Os componentes extraídos — tanto textuais quanto visuais — são convertidos em representações vetoriais de alta dimensão por meio de modelos de embedding. O sistema adota uma estratégia de indexação híbrida, combinando busca densa (semântica, baseada em similaridade vetorial) e busca esparsa (baseada em correspondência léxica), o que amplia a cobertura de recuperação para consultas tanto conceituais quanto factuais. Os vetores gerados são armazenados em um banco de dados vetorial especializado, compondo a base de conhecimento estruturada do documento.
+Fase 7 — Geração da Resposta (LLM)
+Os componentes recuperados e seus metadados estruturais são injetados no contexto de entrada do modelo de linguagem, que formula a resposta final. O EDGAr adota uma estratégia experimental de dois níveis para validação científica: como modelo principal, são utilizados modelos open-source de escala reduzida — como LLaMA-3 8B ou Qwen-2.5 7B — cuja inferência ocorre via APIs de infraestrutura especializada como Groq ou Together AI, viabilizando o protótipo sem custos proibitivos; como modelo de controle, são utilizados modelos proprietários de larga escala — como GPT-4o ou Gemini Pro — estritamente como linha de base para comparação de desempenho. Essa estrutura experimental sustenta a hipótese central do EDGAr: a curadoria geométrica de layout compensa a limitação paramétrica de modelos menores, permitindo que um LLM de 8B parâmetros atinja níveis de acurácia pedagógica comparáveis aos de modelos comerciais de grande escala.
+
+Hipótese Central
+A validação científica do EDGAr baseia-se na tese de que o isolamento cirúrgico de componentes didáticos — tabelas, figuras, fórmulas e parágrafos — remove o ruído contextual que induz alucinações em modelos de menor escala. Ao purificar o contexto de entrada antes da fase de geração, o sistema permite que modelos open-source de 8B parâmetros operem sobre informação estruturalmente limpa e pedagogicamente relevante, eliminando o fardo do processamento de páginas inteiras e tornando a arquitetura viável para plataformas educacionais com recursos computacionais limitados.
+
+
+Estrutura Detalhada do Capítulo de Metodologia
+4.1 Visão Geral da Arquitetura e Filosofia do Sistema
+Objetivo da seção: Apresentar o ecossistema completo do projeto, dividindo as responsabilidades de software e justificando a abordagem sem treinamento (training-free).
+
+Tópicos a abordar:
+
+A natureza do sistema como um pipeline de engenharia de dados baseado em inferência e aprendizado em contexto (in-context learning).
+
+Divisão Cliente-Servidor: As atribuições do Frontend web (LuminIA Reader) e do Backend processador (EDGAr).
+
+A separação temporal crítica do ciclo de vida dos dados: Processamento Assíncrono (Offline / Tempo de Ingestão) versus Processamento Síncrono (Online / Tempo de Consulta).
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Diagrama de Blocos Geral] Um grande infográfico de arquitetura dividindo a tela em duas colunas (Frontend Web e Backend Servidor) e cortado horizontalmente pelas duas linhas temporais (Fase de Carga do PDF e Fase de Dúvida do Usuário), mostrando como as setas de dados navegam entre o navegador e o servidor.
+
+4.2 O Pipeline de Ingestão e Indexação (Fluxo Offline)
+Objetivo da seção: Detalhar minuciosamente como um livro ou documento didático em PDF (seja digital ou escaneado) é desestruturado, purificado e armazenado no banco de dados antes de qualquer interação com o usuário.
+
+4.2.1 Fase 1: Unificação Visual e Normalização de Entrada
+Tópicos a abordar: O processo de conversão de páginas do PDF em matrizes de imagem de alta resolução (renderização). Justificativa técnica de tratar PDFs textuais e escaneados exatamente sob a mesma modalidade visual para eliminar incompatibilidades.
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Fluxograma de Entrada] Uma ilustração simples mostrando duas entradas diferentes (PDF Digital com texto selecionável e PDF Escaneado por imagem) convergindo para um único bloco processador que gera um formato padronizado de imagem (PNG/JPEG de alta densidade).
+
+4.2.2 Fase 2: Análise de Layout (DLA) e Extração Geométrica
+Tópicos a abordar: Funcionamento do modelo de visão computacional voltado para layout. Como o modelo varre a imagem da página e classifica as regiões em classes pedagógicas (tabelas, figuras, fórmulas, parágrafos). A geração das matrizes numéricas que representam as bounding boxes (X min, Y min, X max, Y max).
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Exemplo de Página Segmentada] Uma imagem de uma página didática real (de física ou matemática, por exemplo) com retângulos coloridos translúcidos sobrepostos pelo algoritmo de DLA, identificando visualmente uma caixa de fórmula, uma caixa de gráfico e um bloco de texto.
+
+4.2.3 Fase 3: Recorte Digital Cirúrgico (Cropping)
+Tópicos a abordar: A lógica matemática que utiliza as coordenadas das bounding boxes para recortar fisicamente os pixels de cada componente. Discussão de engenharia sobre a eliminação de ruídos contextuais adjacentes (cabeçalhos, números de página, notas de margem) para purificar a janela de contexto.
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Diagrama Antes vs. Depois do Recorte] De um lado, a página inteira com o ruído circulado em vermelho; do outro, apenas os "retalhos" ou blocos visuais puros isolados pelo EDGAr.
+
+4.2.4 Fase 4: Extração Localizada de Texto (OCR Cirúrgico)
+Tópicos a abordar: A execução híbrida do pipeline. Como o sistema extrai o texto de forma direta via metadados nativos se o componente original for digital, ou como ele aciona o motor de OCR estritamente em cima do retângulo recortado se for escaneado. Vantagens na redução de erros de leitura de tabelas e equações espalhadas.
+
+4.2.5 Fase 5: Vetorização e Indexação Multimodal Híbrida
+Tópicos a abordar: A transformação de blocos visuais e textuais em \textit{embeddings}. A estrutura de armazenamento no banco de dados vetorial, correlacionando os vetores semânticos com os metadados de localização física na página original do PDF. A paralelização com o índice visual do modelo de linguagem e visão (VLM) para as páginas completas.
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Esquema de Banco de Dados] Uma tabela ou mapa mental demonstrando a estrutura de um objeto indexado no banco (Vetor do Componente + ID do Documento + Número da Página + Coordenadas Geométricas + Texto Puro Extraído).
+
+4.3 O Pipeline de Recuperação e Geração (Fluxo Online)
+Objetivo da seção: Explicar passo a passo a mecânica de tempo real que ocorre no milissegundo em que o estudante submete uma dúvida na interface web.
+
+4.3.1 Fase 6: Busca Multimodal no Espaço Visual e Fusão de Componentes
+Tópicos a abordar: Como a dúvida textual do aluno interage com o VLM para trazer as páginas candidatas. O cruzamento imediato dessas páginas com o índice de granularidade fina do EDGAr para extrair não a folha inteira, mas os blocos recortados específicos que possuem maior similaridade semântica com o prompt.
+
+4.3.2 Fase 7: Engenharia de Contexto e Geração Baseada em Evidências puros
+Tópicos a abordar: A montagem do prompt final que é enviado para a LLM. Como os componentes limpos isolados pelo EDGAr são organizados dentro da janela de contexto. As instruções do sistema para forçar o modelo a responder estritamente com base nos recortes fornecidos e emitir avisos controlados em vez de alucinar se o bloco for insuficiente.
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Estrutura do Prompt Injetado] Um bloco de texto formatado simulando o template de prompt que a arquitetura monta antes de disparar a API (Instruções de Abstenção + Blocos de Evidências Purificados pelo EDGAr + Pergunta do Aluno).
+
+4.4 Metodologia Experimental e Ambiente de Avaliação
+Objetivo da seção: Definir os parâmetros científicos do teste para que a banca possa validar a sua Hipótese Central de pesquisa.
+
+Tópicos a abordar:
+
+O Estudo de Ablação (Ablation Study): A estratégia de testar o sistema com e sem o mecanismo do EDGAr (Página inteira ruidosa vs. Componente isolado).
+
+A Matriz de Testes Cross-Model: Como os testes cruzarão os modelos abertos de menor escala (LLaMA-3 8B, Qwen-2.5 7B) operando via APIs de alta velocidade (Groq, Together AI) contra a linha de base dos modelos proprietários (GPT-4o, Gemini Pro).
+
+Métricas de Avaliação Preliminar: Definição de como a precisão e a taxa de alucinação serão medidas e comparadas nos testes.
+
+Elementos Visuais Planejados:
+
+[Elemento Visual: Tabela da Matriz Experimental] Uma tabela cruzando as abordagens de contexto (Página Inteira vs. Componente EDGAr) com os modelos testados (Abertos vs. Proprietários) para detalhar os cenários do experimento.
+
+[Elemento Visual: Tabela de Especificações do Stack Técnico] Uma tabela curta resumindo o ecossistema tecnológico do protótipo (Linguagens, Framework Frontend, Banco de Dados Vetorial, Provedores de API de Inferência).

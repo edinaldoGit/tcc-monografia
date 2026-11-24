@@ -1,0 +1,46 @@
+\chapter{Introdução}
+\label{cap:introducao}
+
+O avanço acelerado da Inteligência Artificial (IA) generativa tem impulsionado transformações profundas no cenário educacional, com os grandes modelos de linguagem (\textit{Large Language Models}, LLMs) emergindo como ferramentas promissoras para mediar a relação entre o estudante e o conhecimento \citeb{kasneci2023chatgpt}. Aplicações baseadas nesses modelos passaram a ser exploradas em tarefas como tutoria automatizada, sumarização de materiais didáticos e resposta a perguntas sobre conteúdos acadêmicos, abrindo novas possibilidades para o aprendizado assistido por IA.
+
+Contudo, apesar da alta capacidade de articulação textual, esses modelos apresentam uma limitação importante para o ambiente educacional: a alucinação. Esse fenômeno é caracterizado pela geração de respostas que, embora gramaticalmente fluidas, podem conter informações incorretas ou sem respaldo nas fontes consultadas, comprometendo a confiabilidade do conteúdo entregue ao estudante \citeb{Ji_2023}.
+
+Para mitigar essa vulnerabilidade e ancorar as respostas em fontes de dados verificáveis, \citeonline{NEURIPS2020_6b493230} introduziram a arquitetura de \textit{Retrieval-Augmented Generation} (RAG), uma abordagem que recupera blocos de informação de uma base de conhecimento externa e os incorpora ao contexto do modelo antes da geração da resposta. No contexto educacional, essa estratégia representa um avanço relevante, pois possibilita que sistemas de IA respondam com base nos materiais didáticos fornecidos pelo estudante ou pela instituição. Embora contribua para fundamentar as respostas, a recuperação de informações não garante, por si só, sua correção nem elimina a possibilidade de alucinações.
+
+Outro desafio surge quando o RAG é aplicado a documentos acadêmicos. Estratégias tradicionais frequentemente operam sobre fragmentos de texto e, conforme apontado por \citeonline{gao2023retrieval}, a extração e a fragmentação podem comprometer dados estruturados presentes em PDFs. Além disso, materiais didáticos combinam explicações, tabelas, gráficos, fórmulas e diagramas, cuja interpretação depende das relações entre esses elementos. Nesses casos, uma explicação pode ser separada do componente visual a que se refere, dificultando a recuperação do contexto necessário. Por isso, arquiteturas de \textit{Multimodal Retrieval-Augmented Generation} (MRAG) investigam formas de considerar as dimensões textuais e visuais dos documentos \citebdois{faysse2025colpali}{yun2025lilac}.
+
+Para ilustrar o problema, considere um estudante que consulte, em um livro de Física, a aceleração centrípeta de um satélite em órbita geossíncrona. O valor encontra-se em uma linha de tabela cercada por textos e figuras sobre outros tópicos: enviar a página inteira adiciona ruído ao modelo, ao passo que dividir o texto em blocos fixos pode separar os valores de seus cabeçalhos.
+
+Pesquisas recentes exploram diferentes caminhos para lidar com essa complexidade. O ColPali, apresentado por \citeonline{faysse2025colpali}, utiliza representações visuais para recuperar páginas de documentos, mas sua unidade de recuperação permanece a página inteira. Já o SLEUTH \citeb{liu2025resolving} emprega estratégias orientadas a agentes para refinar buscas em documentos extensos, enquanto o LILaC \citeb{yun2025lilac} explora relações entre elementos textuais e visuais. Essas propostas oferecem alternativas relevantes para a recuperação documental, mas também motivam a investigação de uma recuperação mais localizada, capaz de distinguir componentes específicos de uma página sem depender exclusivamente do conteúdo textual contínuo.
+
+Nesse contexto, o presente trabalho apresenta o EDGAR, uma arquitetura de Geração Aumentada por Recuperação Multimodal (MRAG) voltada à consulta de livros-texto e apostilas em PDF. Sua principal característica é a recuperação em granularidade fina, que trata textos, tabelas, gráficos e diagramas como componentes individuais associados às suas coordenadas no documento, combinando extração textual e descrição de elementos visuais por modelos de visão e linguagem. Essa organização permite fundamentar as respostas em evidências localizáveis e exibi-las em uma interface interativa que destaca as regiões de origem no próprio PDF, favorecendo a transparência da consulta.
+
+Diante desse cenário, a pesquisa busca responder à seguinte questão: em que medida a recuperação em granularidade de componentes, associada à descrição de elementos visuais, influencia a localização de evidências e a qualidade das respostas em documentos didáticos PDF, em comparação com estratégias tradicionais de RAG textual?
+
+Para investigar essa questão, a arquitetura EDGAR foi comparada experimentalmente com três configurações alternativas sobre quatro livros didáticos de áreas distintas, avaliando-se a recuperação de evidências e a qualidade das respostas geradas. As contribuições do trabalho compreendem a implementação da arquitetura EDGAR, a interface de validação com rastreabilidade geométrica no PDF e a avaliação experimental comparativa das quatro configurações.
+
+Este trabalho está organizado da seguinte forma: o presente capítulo contextualiza o tema, delimita o problema de pesquisa e apresenta os objetivos geral e específicos do estudo. No Capítulo~\ref{cap:fundamentacao-teorica}, é apresentada a fundamentação teórica necessária para a compreensão da pesquisa. O Capítulo~\ref{sec:trabalhos-relacionados} aborda os trabalhos relacionados e a lacuna que motiva a proposta. No Capítulo~\ref{chap:arquitetura}, é descrita a arquitetura EDGAR e a sua implementação. O Capítulo~\ref{chap:metodologia-avaliacao} detalha a metodologia adotada para a avaliação experimental. O Capítulo~\ref{cap:resultados} apresenta e discute os resultados obtidos, bem como as limitações identificadas. Por fim, o Capítulo~\ref{chap:conclusoes-e-trabalhos-futuros} reúne as conclusões do estudo e as perspectivas para trabalhos futuros.
+
+
+\section{Objetivos}
+\label{sec:objetivos}
+
+\subsection{Objetivo Geral}
+\label{subsec:objetivo_geral}
+
+Desenvolver e avaliar experimentalmente uma arquitetura de geração aumentada por recuperação multimodal (MRAG) em granularidade fina, voltada à consulta de materiais didáticos em PDF, para recuperar evidências textuais e visuais rastreáveis e investigar seus efeitos sobre a qualidade das respostas geradas.
+
+\subsection{Objetivos Específicos}
+\label{subsec:objs_especificos}
+
+Para alcançar o objetivo geral, definem-se os seguintes objetivos específicos:
+
+\begin{itemize}
+    \item[-] segmentar materiais didáticos em componentes textuais e visuais, produzindo representações textuais indexadas vetorialmente, incluindo descrições de elementos visuais;
+
+    \item[-] recuperar componentes documentais associados às consultas e fornecer ao modelo gerador evidências acompanhadas de informações de origem;
+
+    \item[-] permitir a validação visual e a rastreabilidade geométrica das evidências recuperadas por meio de uma interface interativa;
+
+    \item[-] avaliar experimentalmente o EDGAR em comparação com três configurações alternativas, analisando a recuperação de evidências e a qualidade das respostas geradas.
+\end{itemize}
